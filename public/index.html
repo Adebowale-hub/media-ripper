@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediaRipper — YouTube Downloader</title>
+  <meta name="description" content="Download YouTube videos and music in any format. Audio only, video only, or full quality. Playlist downloads as zip. No cloud storage." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <main class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🎵</span>
+        <span class="logo-text">MediaRipper</span>
+      </div>
+      <p class="tagline">Download YouTube videos & music — no cloud, no limits</p>
+    </header>
+
+    <!-- URL Input Card -->
+    <section class="card input-card" id="input-section">
+      <div class="url-input-group">
+        <div class="url-icon">🔗</div>
+        <input
+          type="url"
+          id="url-input"
+          placeholder="Paste YouTube URL or playlist link..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="fetch-btn" class="btn btn-primary" onclick="fetchInfo()">
+          <span class="btn-text">Fetch</span>
+          <span class="btn-loader" hidden></span>
+        </button>
+      </div>
+      <div id="url-error" class="error-msg" hidden></div>
+      <div class="quick-links">
+        <span class="quick-label">Try:</span>
+        <button class="quick-link" onclick="pasteExample('single')">Single video</button>
+        <button class="quick-link" onclick="pasteExample('playlist')">Playlist</button>
+      </div>
+    </section>
+
+    <!-- Video Info Card (shown after fetch) -->
+    <section class="card info-card" id="info-card" hidden>
+      <div class="media-info">
+        <img id="info-thumbnail" class="thumbnail" src="" alt="Video thumbnail" />
+        <div class="media-details">
+          <h2 id="info-title" class="media-title"></h2>
+          <p id="info-meta" class="media-meta"></p>
+          <div id="playlist-badge" class="badge badge-playlist" hidden>
+            <span>📋</span> <span id="playlist-count"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download Options -->
+      <div class="options-grid">
+        <!-- Type -->
+        <div class="option-group">
+          <label class="option-label">Download Type</label>
+          <div class="type-tabs" id="type-tabs">
+            <button class="type-tab active" data-type="video" onclick="selectType('video')">
+              🎬 Video + Audio
+            </button>
+            <button class="type-tab" data-type="audio" onclick="selectType('audio')">
+              🎵 Audio Only
+            </button>
+            <button class="type-tab" data-type="video-only" onclick="selectType('video-only')">
+              📹 Video Only
+            </button>
+          </div>
+        </div>
+
+        <!-- Quality (video) -->
+        <div class="option-group" id="quality-group">
+          <label class="option-label">Quality</label>
+          <div class="select-wrapper">
+            <select id="quality-select" class="styled-select">
+              <option value="2160">4K (2160p)</option>
+              <option value="1440">1440p</option>
+              <option value="1080" selected>1080p (HD)</option>
+              <option value="720">720p</option>
+              <option value="480">480p</option>
+              <option value="360">360p</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Format -->
+        <div class="option-group" id="format-group">
+          <label class="option-label">Format</label>
+          <div class="select-wrapper">
+            <select id="format-select" class="styled-select">
+              <option value="mp4">MP4</option>
+              <option value="webm">WebM</option>
+              <option value="mkv">MKV</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Audio format (hidden until audio selected) -->
+        <div class="option-group" id="audio-format-group" hidden>
+          <label class="option-label">Audio Format</label>
+          <div class="select-wrapper">
+            <select id="audio-format-select" class="styled-select">
+              <option value="mp3">MP3</option>
+              <option value="m4a">M4A (AAC)</option>
+              <option value="flac">FLAC (Lossless)</option>
+              <option value="wav">WAV</option>
+              <option value="opus">Opus</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Playlist option -->
+        <div class="option-group" id="playlist-option" hidden>
+          <label class="option-label">Playlist Mode</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="playlist-toggle" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Download entire playlist as ZIP</span>
+          </label>
+        </div>
+      </div>
+
+      <button id="download-btn" class="btn btn-download" onclick="startDownload()">
+        <span class="download-icon">⬇️</span>
+        <span class="download-text">Download</span>
+      </button>
+    </section>
+
+    <!-- Progress Card -->
+    <section class="card progress-card" id="progress-card" hidden>
+      <div class="progress-header">
+        <div class="progress-spinner"></div>
+        <div class="progress-info">
+          <p id="progress-status" class="progress-status">Preparing download...</p>
+          <p id="progress-detail" class="progress-detail"></p>
+        </div>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+        <span class="progress-percent" id="progress-percent">0%</span>
+      </div>
+    </section>
+
+    <!-- Done Card -->
+    <section class="card done-card" id="done-card" hidden>
+      <div class="done-icon">✅</div>
+      <h3 class="done-title">Ready to download!</h3>
+      <p class="done-sub" id="done-sub">Your file is ready.</p>
+      <a id="done-link" class="btn btn-download" href="#" download>
+        <span>💾</span> Save File
+      </a>
+      <button class="btn btn-secondary" onclick="resetApp()">Download Another</button>
+    </section>
+
+    <!-- Error Card -->
+    <section class="card error-card" id="error-card" hidden>
+      <div class="error-icon">⚠️</div>
+      <h3 class="error-title">Something went wrong</h3>
+      <p class="error-msg-text" id="error-msg-text"></p>
+      <button class="btn btn-secondary" onclick="resetApp()">Try Again</button>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <div class="feature-item">
+        <span class="feature-icon">🚀</span>
+        <span>Max quality downloads</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">📦</span>
+        <span>Playlist → ZIP</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🔒</span>
+        <span>No cloud storage</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">⚡</span>
+        <span>Live progress</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>For personal use only &bull; Respect copyright laws &bull; Running locally on your machine</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

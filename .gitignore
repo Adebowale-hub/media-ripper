@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Compiled Standalone Executables & Bundles (large files > 100MB)
+dist/
+*.exe
+*.zip
+
+# Runtime temporary downloads
+downloads/
+*.tmp
+*.log
+
+# Sensitive credentials & environment
+cookies.txt
+.env
+
+# OS Files
+Thumbs.db
+.DS_Store
+
+# Temporary scripts
+gen.js
+sea-config.json
