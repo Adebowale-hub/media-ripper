@@ -19,7 +19,7 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
 }
 
 // If YOUTUBE_COOKIES env var is present, auto-write to cookies.txt (convenient for cloud deployment)
-if (process.env.YOUTUBE_COOKIES && !fs.existsSync(COOKIES_FILE)) {
+if (process.env.YOUTUBE_COOKIES) {
   try {
     fs.writeFileSync(COOKIES_FILE, process.env.YOUTUBE_COOKIES, 'utf8');
     console.log('🍪 Loaded YouTube cookies from YOUTUBE_COOKIES environment variable');
@@ -57,8 +57,6 @@ function getYtDlpArgs(extraArgs = []) {
   if (fs.existsSync(COOKIES_FILE)) {
     args.push('--cookies', COOKIES_FILE);
   }
-  // Use Android & Web player clients and ignore SSL issues on cloud IPs
-  args.push('--extractor-args', 'youtube:player_client=android,web');
   args.push('--no-check-certificates');
   return args.concat(extraArgs);
 }
