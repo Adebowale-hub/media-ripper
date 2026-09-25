@@ -1,0 +1,10 @@
+node_modules
+dist
+downloads
+*.exe
+*.zip
+*.log
+*.tmp
+cookies.txt
+.git
+.env

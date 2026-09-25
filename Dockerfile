@@ -26,12 +26,13 @@ COPY . .
 # Ensure downloads directory exists
 RUN mkdir -p downloads
 
-# Expose server port
+# Expose server port (default 3000, Render injects PORT)
+ENV PORT=3000
 EXPOSE 3000
 
-# Health check
+# Health check (handles custom PORT or default 3000)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
+  CMD sh -c "curl -f http://localhost:\${PORT:-3000}/ || exit 1"
 
 # Start the application
 CMD ["node", "server/index.js"]
