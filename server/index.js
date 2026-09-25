@@ -18,6 +18,16 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
   fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 }
 
+// If YOUTUBE_COOKIES env var is present, auto-write to cookies.txt (convenient for cloud deployment)
+if (process.env.YOUTUBE_COOKIES && !fs.existsSync(COOKIES_FILE)) {
+  try {
+    fs.writeFileSync(COOKIES_FILE, process.env.YOUTUBE_COOKIES, 'utf8');
+    console.log('🍪 Loaded YouTube cookies from YOUTUBE_COOKIES environment variable');
+  } catch (err) {
+    console.error('Failed to write YOUTUBE_COOKIES:', err);
+  }
+}
+
 // Locate bundled or system yt-dlp and ffmpeg
 const BUNDLED_YTDLP = path.join(APP_DIR, 'yt-dlp.exe');
 const BUNDLED_FFMPEG = path.join(APP_DIR, 'ffmpeg.exe');
@@ -31,6 +41,12 @@ if (fs.existsSync(BUNDLED_YTDLP)) {
   if (fs.existsSync(BUNDLED_FFMPEG)) {
     DEFAULT_ARGS.push('--ffmpeg-location', APP_DIR);
   }
+} else if (process.platform !== 'win32' && fs.existsSync('/usr/local/bin/yt-dlp')) {
+  EXEC_CMD = '/usr/local/bin/yt-dlp';
+  DEFAULT_ARGS = [];
+} else if (process.platform !== 'win32' && fs.existsSync('/usr/bin/yt-dlp')) {
+  EXEC_CMD = '/usr/bin/yt-dlp';
+  DEFAULT_ARGS = [];
 } else {
   EXEC_CMD = process.platform === 'win32' ? 'python' : (fs.existsSync('/usr/bin/python3') ? 'python3' : 'python');
   DEFAULT_ARGS = ['-m', 'yt_dlp'];
@@ -41,6 +57,9 @@ function getYtDlpArgs(extraArgs = []) {
   if (fs.existsSync(COOKIES_FILE)) {
     args.push('--cookies', COOKIES_FILE);
   }
+  // Use Android & Web player clients and ignore SSL issues on cloud IPs
+  args.push('--extractor-args', 'youtube:player_client=android,web');
+  args.push('--no-check-certificates');
   return args.concat(extraArgs);
 }
 
@@ -60,18 +79,42 @@ app.get('/api/info', async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'URL required' });
 
-  const args = getYtDlpArgs(['--dump-json', '--no-playlist', '--quiet', url]);
+  const args = getYtDlpArgs(['--dump-json', '--no-playlist', '--no-warnings', url]);
   let output = '';
+  let errorOutput = '';
   const proc = spawn(EXEC_CMD, args);
+
   proc.stdout.on('data', (d) => { output += d.toString(); });
+  proc.stderr.on('data', (d) => { errorOutput += d.toString(); });
+  proc.on('error', (err) => {
+    console.error('[proc error]:', err);
+    errorOutput += err.message;
+  });
+
   proc.on('close', (code) => {
     if (code !== 0) {
-      const plArgs = getYtDlpArgs(['--dump-json', '--flat-playlist', '--quiet', url]);
+      console.warn(`[yt-dlp info failed, trying playlist mode. code: ${code}]:`, errorOutput);
+      const plArgs = getYtDlpArgs(['--dump-json', '--flat-playlist', '--no-warnings', url]);
       let plOutput = '';
+      let plErrorOutput = '';
       const plProc = spawn(EXEC_CMD, plArgs);
       plProc.stdout.on('data', (d) => { plOutput += d.toString(); });
+      plProc.stderr.on('data', (d) => { plErrorOutput += d.toString(); });
+      plProc.on('error', (err) => { plErrorOutput += err.message; });
+
       plProc.on('close', (plCode) => {
-        if (plCode !== 0) return res.status(400).json({ error: 'Could not fetch media info. Please verify the URL.' });
+        if (plCode !== 0) {
+          console.error(`[yt-dlp playlist failed. code: ${plCode}]:`, plErrorOutput);
+          const rawErr = (errorOutput || plErrorOutput || '').trim();
+          let userMsg = 'Could not fetch media info. Please verify the URL.';
+          if (rawErr.includes("Sign in to confirm you're not a bot")) {
+            userMsg = 'YouTube detected cloud hosting IP (Bot check). YouTube cookies needed.';
+          } else if (rawErr) {
+            const errLine = rawErr.split('\n').find(l => l.includes('ERROR:'));
+            if (errLine) userMsg = errLine.replace(/^ERROR:\s*/, '');
+          }
+          return res.status(400).json({ error: userMsg, details: rawErr });
+        }
         const lines = plOutput.trim().split('\n').filter(Boolean);
         const entries = lines.map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
         res.json({
@@ -103,6 +146,7 @@ app.get('/api/info', async (req, res) => {
         })).filter(f => f.resolution || f.acodec !== 'none')
       });
     } catch (e) {
+      console.error('Failed to parse video info:', e, 'Raw output:', output);
       res.status(500).json({ error: 'Failed to parse video info' });
     }
   });
