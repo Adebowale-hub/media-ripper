@@ -8,6 +8,10 @@
   padding: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 :root {
   /* Pitch Black OLED Palette */
   --bg: #000000;
