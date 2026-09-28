@@ -346,4 +346,136 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') fetchInfo();
     });
   }
+
+  // Load cookie status on page load
+  loadCookieStatus();
 });
+
+// ═══════════════════════════════════════
+// Cookie Manager
+// ═══════════════════════════════════════
+
+async function loadCookieStatus() {
+  try {
+    const res = await fetch('/api/cookies/status');
+    const data = await res.json();
+    updateCookieStatusUI(data);
+  } catch (e) {
+    // silently ignore — not critical for page load
+  }
+}
+
+function updateCookieStatusUI(data) {
+  const dot = document.getElementById('cookie-status-dot');
+  const subtitle = document.getElementById('cookie-subtitle');
+  const clearBtn = document.getElementById('clear-cookies-btn');
+
+  if (data.hasCookies && data.cookieInfo) {
+    dot.className = 'cookie-status-dot active';
+    subtitle.textContent = `✓ ${data.cookieInfo.entries} cookie entries loaded — bot protection bypassed`;
+    if (clearBtn) clearBtn.hidden = false;
+  } else {
+    dot.className = 'cookie-status-dot';
+    subtitle.textContent = 'Not loaded — required if YouTube shows bot detection errors';
+    if (clearBtn) clearBtn.hidden = true;
+  }
+}
+
+function toggleCookiePanel() {
+  const body = document.getElementById('cookie-body');
+  const chevron = document.getElementById('cookie-chevron');
+  const toggle = document.getElementById('cookie-toggle');
+  const isOpen = !body.hidden;
+
+  body.hidden = isOpen;
+  chevron.classList.toggle('open', !isOpen);
+  toggle.setAttribute('aria-expanded', String(!isOpen));
+}
+
+function showCookieFeedback(msg, type) {
+  const el = document.getElementById('cookie-feedback');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `cookie-feedback ${type}`;
+  el.hidden = false;
+  if (type === 'success') {
+    setTimeout(() => { el.hidden = true; }, 5000);
+  }
+}
+
+async function uploadCookies() {
+  const textarea = document.getElementById('cookie-textarea');
+  const content = textarea ? textarea.value.trim() : '';
+  if (!content) {
+    showCookieFeedback('Please paste your cookies.txt content or drop the file above.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/cookies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: content
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showCookieFeedback(data.error || 'Failed to save cookies.', 'error');
+      return;
+    }
+    showCookieFeedback(`✓ ${data.entries} cookie entries saved! YouTube downloads should now work.`, 'success');
+    if (textarea) textarea.value = '';
+    loadCookieStatus();
+  } catch (e) {
+    showCookieFeedback('Network error saving cookies.', 'error');
+  }
+}
+
+async function clearCookies() {
+  try {
+    const res = await fetch('/api/cookies', { method: 'DELETE' });
+    if (res.ok) {
+      showCookieFeedback('Cookies cleared.', 'success');
+      loadCookieStatus();
+    }
+  } catch (e) {
+    showCookieFeedback('Failed to clear cookies.', 'error');
+  }
+}
+
+function handleCookieFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  readCookieFile(file);
+}
+
+function handleCookieDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'copy';
+  document.getElementById('cookie-drop-zone').classList.add('drag-over');
+}
+
+function handleCookieDragLeave(event) {
+  document.getElementById('cookie-drop-zone').classList.remove('drag-over');
+}
+
+function handleCookieDrop(event) {
+  event.preventDefault();
+  document.getElementById('cookie-drop-zone').classList.remove('drag-over');
+  const file = event.dataTransfer.files[0];
+  if (file) readCookieFile(file);
+}
+
+function readCookieFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const textarea = document.getElementById('cookie-textarea');
+    if (textarea) {
+      textarea.value = e.target.result;
+      showCookieFeedback(`File "${file.name}" loaded. Click "Save Cookies" to apply.`, 'success');
+    }
+  };
+  reader.onerror = () => {
+    showCookieFeedback('Failed to read the file.', 'error');
+  };
+  reader.readAsText(file);
+}

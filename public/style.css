@@ -746,6 +746,223 @@ body {
   letter-spacing: 0.03em;
 }
 
+/* ── Cookie Manager Panel ── */
+.cookie-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.cookie-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  gap: 12px;
+}
+
+.cookie-header:hover {
+  background: var(--surface-hover);
+}
+
+.cookie-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.cookie-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cookie-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.cookie-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cookie-subtitle {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.cookie-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  display: inline-block;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cookie-status-dot.active {
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.5);
+}
+
+.cookie-status-dot.error {
+  background: var(--danger);
+  box-shadow: 0 0 8px rgba(255, 23, 68, 0.5);
+}
+
+.cookie-chevron {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.cookie-chevron.open {
+  transform: rotate(180deg);
+}
+
+.cookie-body {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.cookie-instructions {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 14px 0 10px;
+  line-height: 1.5;
+}
+
+.cookie-steps {
+  list-style: decimal;
+  padding-left: 18px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.cookie-steps li {
+  margin-bottom: 2px;
+}
+
+.cookie-steps a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+}
+
+.cookie-steps a:hover {
+  text-decoration: underline;
+}
+
+.cookie-drop-zone {
+  border: 1.5px dashed var(--border-hover);
+  border-radius: var(--radius-xs);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #050507;
+}
+
+.cookie-drop-zone:hover,
+.cookie-drop-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.drop-icon {
+  font-size: 1.6rem;
+}
+
+.drop-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.drop-text code {
+  color: var(--accent-cyan);
+  font-size: 0.78rem;
+  background: rgba(0, 240, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+.cookie-paste-area {
+  margin-bottom: 14px;
+}
+
+.cookie-textarea {
+  width: 100%;
+  background: #000000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 0.75rem;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s ease;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+.cookie-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.cookie-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.cookie-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.cookie-feedback {
+  margin-top: 12px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+}
+
+.cookie-feedback.success {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.3);
+  color: var(--success);
+}
+
+.cookie-feedback.error {
+  background: rgba(255, 23, 68, 0.08);
+  border-color: rgba(255, 23, 68, 0.25);
+  color: var(--danger);
+}
+
 /* ── Responsive ── */
 @media (max-width: 560px) {
   .container {

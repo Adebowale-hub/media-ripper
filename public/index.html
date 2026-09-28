@@ -51,7 +51,56 @@
       </div>
     </section>
 
-    <!-- Video Info Card (shown after fetch) -->
+    <!-- Cookie Manager (collapsed by default) -->
+    <section class="card cookie-card" id="cookie-section">
+      <button class="cookie-header" id="cookie-toggle" onclick="toggleCookiePanel()" aria-expanded="false">
+        <div class="cookie-header-left">
+          <span class="cookie-icon">🍪</span>
+          <div>
+            <span class="cookie-title">YouTube Cookies</span>
+            <span class="cookie-subtitle" id="cookie-subtitle">Not loaded — required for bot-protected videos</span>
+          </div>
+        </div>
+        <div class="cookie-header-right">
+          <span class="cookie-status-dot" id="cookie-status-dot"></span>
+          <span class="cookie-chevron" id="cookie-chevron">▼</span>
+        </div>
+      </button>
+
+      <div class="cookie-body" id="cookie-body" hidden>
+        <p class="cookie-instructions">
+          YouTube blocks downloads from cloud/server IPs. Fix this by exporting your browser cookies:
+        </p>
+        <ol class="cookie-steps">
+          <li>Install <strong>Get cookies.txt LOCALLY</strong> (Chrome) or <strong>cookies.txt</strong> (Firefox) extension</li>
+          <li>Go to <a href="https://youtube.com" target="_blank" rel="noopener">youtube.com</a> while signed in</li>
+          <li>Click the extension icon → Export cookies for this site</li>
+          <li>Paste the file content below or drop the file</li>
+        </ol>
+
+        <div class="cookie-drop-zone" id="cookie-drop-zone"
+             ondragover="handleCookieDragOver(event)"
+             ondragleave="handleCookieDragLeave(event)"
+             ondrop="handleCookieDrop(event)"
+             onclick="document.getElementById('cookie-file-input').click()">
+          <input type="file" id="cookie-file-input" accept=".txt,text/plain" style="display:none" onchange="handleCookieFile(event)" />
+          <span class="drop-icon">📂</span>
+          <span class="drop-text">Drop <code>cookies.txt</code> here or click to browse</span>
+        </div>
+
+        <div class="cookie-paste-area">
+          <label class="option-label" for="cookie-textarea">Or paste raw cookie content</label>
+          <textarea id="cookie-textarea" class="cookie-textarea" placeholder="# Netscape HTTP Cookie File&#10;.youtube.com&#9;TRUE&#9;/&#9;FALSE&#9;..." rows="5"></textarea>
+        </div>
+
+        <div class="cookie-actions">
+          <button class="btn btn-primary" style="width:auto;padding:10px 22px;" onclick="uploadCookies()">Save Cookies</button>
+          <button class="btn btn-secondary" style="width:auto;flex:0 0 auto;padding:10px 18px;" id="clear-cookies-btn" onclick="clearCookies()" hidden>Clear Cookies</button>
+        </div>
+        <div id="cookie-feedback" class="cookie-feedback" hidden></div>
+      </div>
+    </section>
+
     <section class="card info-card" id="info-card" hidden>
       <div class="media-info">
         <img id="info-thumbnail" class="thumbnail" src="" alt="Video thumbnail" />

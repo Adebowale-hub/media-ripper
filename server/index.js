@@ -61,6 +61,53 @@ function getYtDlpArgs(extraArgs = []) {
   return args.concat(extraArgs);
 }
 
+// API: Check if cookies are loaded
+app.get('/api/cookies/status', (req, res) => {
+  const hasCookies = fs.existsSync(COOKIES_FILE);
+  let cookieInfo = null;
+  if (hasCookies) {
+    try {
+      const stat = fs.statSync(COOKIES_FILE);
+      const content = fs.readFileSync(COOKIES_FILE, 'utf8');
+      const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+      cookieInfo = { size: stat.size, entries: lines.length, modified: stat.mtime };
+    } catch (e) { /* ignore */ }
+  }
+  res.json({ hasCookies, cookieInfo });
+});
+
+// API: Upload cookies.txt content from browser
+app.post('/api/cookies', express.text({ limit: '5mb', type: '*/*' }), (req, res) => {
+  const content = req.body;
+  if (!content || typeof content !== 'string') {
+    return res.status(400).json({ error: 'No cookie content provided.' });
+  }
+  // Basic validation: must look like a Netscape cookie file or have cookie entries
+  const lines = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+  const validLines = lines.filter(l => l.split('\t').length >= 6);
+  if (validLines.length === 0) {
+    return res.status(400).json({ error: 'Invalid cookies.txt format. Export from browser using a cookie exporter extension (Netscape format).' });
+  }
+  try {
+    fs.writeFileSync(COOKIES_FILE, content, 'utf8');
+    console.log(`🍪 Cookies updated via browser upload (${validLines.length} entries)`);
+    res.json({ success: true, entries: validLines.length });
+  } catch (err) {
+    console.error('Failed to write cookies:', err);
+    res.status(500).json({ error: 'Failed to save cookies file.' });
+  }
+});
+
+// API: Delete cookies
+app.delete('/api/cookies', (req, res) => {
+  try {
+    if (fs.existsSync(COOKIES_FILE)) fs.unlinkSync(COOKIES_FILE);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to remove cookies file.' });
+  }
+});
+
 // Serve public static assets
 const PUBLIC_DIR = fs.existsSync(path.join(APP_DIR, 'public'))
   ? path.join(APP_DIR, 'public')
