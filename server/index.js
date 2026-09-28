@@ -58,9 +58,9 @@ function getYtDlpArgs(extraArgs = []) {
     args.push('--cookies', COOKIES_FILE);
   }
   args.push('--no-check-certificates');
-  // Android client bypasses YouTube bot detection on cloud IPs and supports
-  // DASH streams (separate video+audio) unlike the iOS client.
-  args.push('--extractor-args', 'youtube:player_client=android,web');
+  // tv_embedded is YouTube's TV/embedded player — most reliable on cloud IPs.
+  // It bypasses bot detection and has no format availability restrictions.
+  args.push('--extractor-args', 'youtube:player_client=tv_embedded,web');
   return args.concat(extraArgs);
 }
 
