@@ -58,10 +58,9 @@ function getYtDlpArgs(extraArgs = []) {
     args.push('--cookies', COOKIES_FILE);
   }
   args.push('--no-check-certificates');
-  // Use iOS + web player clients to bypass YouTube bot detection on cloud IPs.
-  // iOS client avoids the "Sign in" and "page needs to be reloaded" errors.
-  args.push('--extractor-args', 'youtube:player_client=ios,web');
-  args.push('--user-agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1');
+  // Android client bypasses YouTube bot detection on cloud IPs and supports
+  // DASH streams (separate video+audio) unlike the iOS client.
+  args.push('--extractor-args', 'youtube:player_client=android,web');
   return args.concat(extraArgs);
 }
 
