@@ -58,9 +58,11 @@ function getYtDlpArgs(extraArgs = []) {
     args.push('--cookies', COOKIES_FILE);
   }
   args.push('--no-check-certificates');
-  // tv_embedded is YouTube's TV/embedded player — most reliable on cloud IPs.
-  // It bypasses bot detection and has no format availability restrictions.
-  args.push('--extractor-args', 'youtube:player_client=tv_embedded,web');
+  // ios and web clients expose the full format list.
+  // tv_embedded is added as a fallback for bot-detection bypass on cloud IPs.
+  // --no-check-formats skips the live format availability check which fails on cloud IPs.
+  args.push('--extractor-args', 'youtube:player_client=ios,web,tv_embedded');
+  args.push('--no-check-formats');
   return args.concat(extraArgs);
 }
 
@@ -215,10 +217,18 @@ app.post('/api/download', (req, res) => {
     args.push('-x', '--audio-format', audioFmt, '--audio-quality', '0');
   } else if (type === 'video-only') {
     const res_q = quality || '1080';
-    args.push('-f', `bestvideo[height<=${res_q}][ext=mp4]/bestvideo[height<=${res_q}]/bestvideo`);
+    args.push('-f', `bestvideo[height<=${res_q}][ext=mp4]/bestvideo[height<=${res_q}]/bestvideo[height<=${res_q}]/bestvideo`);
   } else {
     const res_q = quality || '1080';
-    args.push('-f', `bestvideo[height<=${res_q}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${res_q}]+bestaudio/best[height<=${res_q}]/best`);
+    // Progressively broader fallbacks: prefer mp4+m4a, then any video+audio merge, then single best stream
+    args.push('-f', [
+      `bestvideo[height<=${res_q}][ext=mp4]+bestaudio[ext=m4a]`,
+      `bestvideo[height<=${res_q}]+bestaudio`,
+      `bestvideo[height<=${res_q}]+bestaudio/best[height<=${res_q}]`,
+      `best[height<=${res_q}]`,
+      `bestvideo+bestaudio`,
+      `best`
+    ].join('/'));
     args.push('--merge-output-format', format || 'mp4');
   }
 
