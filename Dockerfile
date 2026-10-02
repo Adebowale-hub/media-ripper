@@ -1,10 +1,11 @@
 # Base Node image with Debian
 FROM node:20-bookworm-slim
 
-# Install system dependencies: ffmpeg (for merging) + curl (for yt-dlp binary download)
+# Install system dependencies: ffmpeg (for merging), curl + ca-certificates (for yt-dlp binary download)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install yt-dlp — always pull the latest binary from GitHub to avoid stale pip cache
