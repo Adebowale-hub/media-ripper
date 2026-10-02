@@ -1,17 +1,15 @@
 # Base Node image with Debian
 FROM node:20-bookworm-slim
 
-# Install system dependencies: Python3, pip, ffmpeg
+# Install system dependencies: ffmpeg (for merging) + curl (for yt-dlp binary download)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-venv \
     ffmpeg \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install yt-dlp globally
-RUN python3 -m pip install --no-cache-dir --break-system-packages yt-dlp
+# Install yt-dlp — always pull the latest binary from GitHub to avoid stale pip cache
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
+    && chmod a+rx /usr/local/bin/yt-dlp
 
 # Set working directory
 WORKDIR /app
